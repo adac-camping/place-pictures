@@ -1,0 +1,175 @@
+version: 2.1
+
+orbs:
+  slack: circleci/slack@4.3.0
+
+commands:
+  init_pads_pipeline:
+    parameters:
+      run_deploy_dev:
+        type: boolean
+        default: false
+
+      run_deploy_staging:
+        default: false
+        type: boolean
+
+      run_deploy_production:
+        default: false
+        type: boolean
+
+    steps:
+      - run:
+          name: "Request from PADS to deploy"
+          command: |
+            curl --request POST --url https://circleci.com/api/v2/project/github/adac-camping/pincamp-aws-developer-services/pipeline \
+            --header 'Circle-Token: '"$CIRCLE_TOKEN"'' \
+            --header 'content-type: application/json' \
+            --data '{"parameters":{"run_deploy_dev": << parameters.run_deploy_dev >>, "run_deploy_staging": << parameters.run_deploy_staging >>, "run_deploy_production": << parameters.run_deploy_production >>, "run_main_ci": false, "app": "'"$APP_NAME"'", "release-version": "'"${CIRCLE_SHA1}"'"}}'
+
+jobs:
+  test:
+    working_directory: /home/circleci/project/
+    machine:
+      image: ubuntu-2004:202201-02
+      docker_layer_caching: true
+    resource_class: medium
+    steps:
+      - checkout
+      - run: make build.dev
+      - run: make lint
+      - run: mkdir test-results
+      - run: make tests
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
+      - run:
+          name: Shutdown docker containers
+          command: make down.containers
+          when: always
+    environment:
+      - PYTEST_OPTS: "--junitxml=test-results/junit.xml"
+
+  build_and_store_image:
+    working_directory: /home/circleci/project/
+    machine:
+     image: ubuntu-2004:202201-02
+     docker_layer_caching: true
+    resource_class: medium
+    steps:
+     - checkout
+     - run:
+          name: Build repo production image
+          command: make build.prod
+     - run:
+          name: Build and store repo image
+          command: |
+              docker tag "$CIRCLE_PROJECT_REPONAME" "$ECR/$CIRCLE_PROJECT_REPONAME:release-${CIRCLE_SHA1}"
+              docker tag "$CIRCLE_PROJECT_REPONAME" "$ECR/$CIRCLE_PROJECT_REPONAME:commit-${CIRCLE_SHA1}"
+              docker tag "$CIRCLE_PROJECT_REPONAME" "$ECR/$CIRCLE_PROJECT_REPONAME:latest"
+              eval "$(aws ecr get-login --no-include-email)"
+              docker push "$ECR/$CIRCLE_PROJECT_REPONAME:release-${CIRCLE_SHA1}"
+              docker push "$ECR/$CIRCLE_PROJECT_REPONAME:commit-${CIRCLE_SHA1}"
+              docker push "$ECR/$CIRCLE_PROJECT_REPONAME:latest"
+     - run:
+          name: Shutdown docker containers
+          command: make down.containers
+          when: always
+
+
+  request_deployment:
+    working_directory: /home/circleci/project/
+    machine:
+      image: ubuntu-2004:202201-02
+      docker_layer_caching: true
+    resource_class: medium
+    parameters:
+      environment:
+        type: string
+        default: "dev"
+
+    steps:
+      - when:
+          condition:
+            and:
+              - equal: [ "dev", << parameters.environment >> ]
+          steps:
+            - init_pads_pipeline:
+                run_deploy_dev: true
+      - when:
+          condition:
+            and:
+              - equal: [ "staging", << parameters.environment >> ]
+          steps:
+            - init_pads_pipeline:
+                run_deploy_staging: true
+      - when:
+          condition:
+            and:
+              - equal: [ "production", << parameters.environment >> ]
+          steps:
+            - init_pads_pipeline:
+                run_deploy_production: true
+
+workflows:
+  default:
+    jobs:
+      - test
+      - build_and_store_image:
+         requires:
+           - test
+         filters:
+           branches:
+             only: main
+
+      # DEV
+      - slack/on-hold:
+         name: slack-approval-notification-dev
+         channel: 'ci-kube-apps-dev'
+         requires:
+           - build_and_store_image
+         filters:
+           branches:
+             only: main
+      - approval_dev_deployment:
+         requires:
+           - slack-approval-notification-dev
+         type: approval
+      # Request deployment to dev
+      - request_deployment:
+         requires:
+           - approval_dev_deployment
+         environment: "dev"
+
+      # STAGING
+      - slack/on-hold:
+         name: slack-approval-notification-staging
+         channel: 'ci-kube-apps-staging'
+         requires:
+           - approval_dev_deployment
+      - approval_staging_deployment:
+         requires:
+           - slack-approval-notification-staging
+         type: approval
+      # Request deployment to staging
+      - request_deployment:
+         requires:
+           - approval_staging_deployment
+         environment: "staging"
+
+      # PRODUCTION
+      - slack/on-hold:
+         name: slack-approval-notification-production
+         channel: 'ci-kube-apps-production'
+         requires:
+           - approval_staging_deployment
+      - approval_production_deployment:
+         requires:
+           - slack-approval-notification-production
+         type: approval
+      # Request deployment to staging
+      - request_deployment:
+         requires:
+           - approval_production_deployment
+         environment: "production"

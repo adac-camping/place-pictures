@@ -1,0 +1,25 @@
+media/
+*.pyc
+.coverage
+htmlcov
+*.css
+data
+.cache
+.local
+.idea
+.env
+.DS_Store
+.pytest_cache
+.vscode
+static/
+
+# Shell files
+.ashrc
+.ash_history*
+.bashrc
+.bash_history*
+.python_history
+
+# json-server
+.json-server/*.json
+!.json-server/example.*.json

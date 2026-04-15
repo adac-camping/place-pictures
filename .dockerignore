@@ -1,0 +1,5 @@
+**/var/
+**/.cache/
+**/.local/
+.env*
+.git

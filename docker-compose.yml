@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  repo:
+    image: ${CIRCLE_PROJECT_REPONAME:-repo}:latest
+    build:
+      context: .
+      args:
+        - dev=true
+        - UID=${UID:-1000}
+    volumes:
+      - .:/srv/app
+    command: "python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "10010:8000"
+    tty: true
+    stdin_open: true
+    env_file:
+      - .env
+    restart: on-failure
+    networks:
+      - repo
+      - pincamp-local-proxy
+
+networks:
+  repo:
+    driver: bridge
+  pincamp-local-proxy:
+    name: pincamp-local-net

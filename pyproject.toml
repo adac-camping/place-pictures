@@ -1,0 +1,2 @@
+[tool.black]
+exclude = '''(manage.py|migrations|static|doc)'''

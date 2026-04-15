@@ -1,0 +1,7 @@
+[flake8]
+max-line-length = 120
+exclude = static,doc,.local,migrations,__init__.py
+# ignore rule that clashes with black
+ignore=E231,W503
+
+extend-ignore = E203

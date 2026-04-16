@@ -5,6 +5,7 @@ verify_ssl = true
 
 [packages]
 django = "~=5.2"
+psycopg2-binary = "==2.9.10"
 ddtrace = ">=3.0,<4"
 gunicorn = "==23.0.0"
 sentry-sdk = "==2.39.0"

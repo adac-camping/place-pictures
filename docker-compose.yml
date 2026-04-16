@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   repo:
     image: ${CIRCLE_PROJECT_REPONAME:-repo}:latest
@@ -17,10 +15,36 @@ services:
     stdin_open: true
     env_file:
       - .env
+    depends_on:
+      place-pictures-db:
+        condition: service_healthy
     restart: on-failure
     networks:
       - repo
       - pincamp-local-proxy
+
+  place-pictures-db:
+    image: postgres:14-alpine
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_DB=place_pictures
+      - POSTGRES_USER=place_pictures
+      - POSTGRES_PASSWORD=place_pictures
+    ports:
+      - "10011:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U place_pictures -d place_pictures"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+    networks:
+      - repo
+
+volumes:
+  postgres_data:
+    driver: local
 
 networks:
   repo:

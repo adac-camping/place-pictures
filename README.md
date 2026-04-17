@@ -1,6 +1,6 @@
-# Place Pictures
+# Place Image
 
-Modern AI assisted Picture Workflow for the campsite images.
+Modern AI assisted image workflow for campsite images.
 
 ### Run the app locally
 

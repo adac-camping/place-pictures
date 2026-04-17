@@ -16,6 +16,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.openid_connect",
     "image",
 ]
 
@@ -27,6 +31,12 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
+]
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 ROOT_URLCONF = "place_pictures.urls"
@@ -49,6 +59,39 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "place_pictures.wsgi.application"
 ASGI_APPLICATION = "place_pictures.asgi.application"
+
+PINCAMP_OIDC_CLIENT_ID = os.getenv("PINCAMP_OIDC_CLIENT_ID", "")
+PINCAMP_OIDC_CLIENT_SECRET = os.getenv("PINCAMP_OIDC_CLIENT_SECRET", "")
+PINCAMP_OIDC_REALM_URL = os.getenv("PINCAMP_OIDC_REALM_URL", "")
+PINCAMP_OIDC_ADMIN_ROLE = os.getenv("PINCAMP_OIDC_ADMIN_ROLE", "admin")
+PINCAMP_OIDC_DISCOVERY_URL = (
+    f"{PINCAMP_OIDC_REALM_URL}/.well-known/openid-configuration"
+    if PINCAMP_OIDC_REALM_URL
+    else ""
+)
+
+SOCIALACCOUNT_LOGIN_ON_GET = True
+SOCIALACCOUNT_PROVIDERS = {
+    "openid_connect": {
+        "OAUTH_PKCE_ENABLED": True,
+        "APP": {
+            "provider_id": "keycloak",
+            "name": "Login with PiNCAMP Keycloak",
+            "client_id": PINCAMP_OIDC_CLIENT_ID,
+            "secret": PINCAMP_OIDC_CLIENT_SECRET,
+            "settings": {
+                "server_url": PINCAMP_OIDC_DISCOVERY_URL,
+                "fetch_userinfo": True,
+            },
+        },
+    }
+}
+
+ACCOUNT_ADAPTER = "place_pictures.auth.KeycloakAccountAdapter"
+SOCIALACCOUNT_ADAPTER = "place_pictures.auth.KeycloakSocialAdapter"
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http" if DEBUG else "https"
+LOGIN_URL = "account_login"
+LOGIN_REDIRECT_URL = "/admin/"
 
 connection_string = os.getenv("DB_CONNECTION_STRING")
 if connection_string:

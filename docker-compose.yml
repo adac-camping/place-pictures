@@ -16,26 +16,26 @@ services:
     env_file:
       - .env
     depends_on:
-      place-pictures-db:
+      place-image-db:
         condition: service_healthy
     restart: on-failure
     networks:
       - repo
       - pincamp-local-proxy
 
-  place-pictures-db:
+  place-image-db:
     image: postgres:14-alpine
     environment:
       - PGDATA=/var/lib/postgresql/data/pgdata
-      - POSTGRES_DB=place_pictures
-      - POSTGRES_USER=place_pictures
-      - POSTGRES_PASSWORD=place_pictures
+      - POSTGRES_DB=place_image
+      - POSTGRES_USER=place_image
+      - POSTGRES_PASSWORD=place_image
     ports:
       - "10011:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U place_pictures -d place_pictures"]
+      test: ["CMD-SHELL", "pg_isready -U place_image -d place_image"]
       interval: 2s
       timeout: 5s
       retries: 10

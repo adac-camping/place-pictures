@@ -1,9 +1,9 @@
 {% extends "admin/base_site.html" %}
 
-{% block title %}Place Pictures | Django site admin{% endblock %}
+{% block title %}Place Image | Django site admin{% endblock %}
 
 {% block branding %}
-<div id="site-name"><a href="/admin/">Place Pictures Admin</a></div>
+<div id="site-name"><a href="/admin/">Place Image Admin</a></div>
 {% endblock %}
 
 {% block extrastyle %}
@@ -11,59 +11,59 @@
   <style>
     /* move css out later */
 
-    .place-pictures-tools {
+    .place-image-tools {
       margin: 0 0 20px;
     }
-    .place-pictures-tools form {
+    .place-image-tools form {
       display: flex;
       gap: 10px;
       align-items: center;
       flex-wrap: wrap;
     }
-    .place-pictures-tools input {
+    .place-image-tools input {
       min-width: 320px;
       padding: 8px 10px;
     }
-    .place-pictures-group {
+    .place-image-group {
       margin-bottom: 18px;
       border: 1px solid #d9d9d9;
       border-radius: 6px;
       background: #fff;
       padding: 14px 16px;
     }
-    .place-pictures-group-header {
+    .place-image-group-header {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
       gap: 12px;
       margin-bottom: 10px;
     }
-    .place-pictures-group-title {
+    .place-image-group-title {
       font-weight: 600;
       word-break: break-word;
     }
-    .place-pictures-group ul {
+    .place-image-group ul {
       margin: 0;
       padding-left: 18px;
     }
-    .place-pictures-group li {
+    .place-image-group li {
       margin: 6px 0;
     }
-    .place-pictures-image-row {
+    .place-image-image-row {
       display: flex;
       align-items: baseline;
       gap: 8px;
     }
-    .place-pictures-edit-link {
+    .place-image-edit-link {
       opacity: 0;
       font-size: 12px;
       transition: opacity 120ms ease-in-out;
       white-space: nowrap;
     }
-    .place-pictures-image-row:hover .place-pictures-edit-link {
+    .place-image-image-row:hover .place-image-edit-link {
       opacity: 1;
     }
-    .place-pictures-count {
+    .place-image-count {
       color: #555;
       font-size: 13px;
       white-space: nowrap;
@@ -74,15 +74,15 @@
 {% block breadcrumbs %}
 <div class="breadcrumbs">
   <a href="/admin/">Home</a>
-  &rsaquo; Place Pictures
+  &rsaquo; Place Image
 </div>
 {% endblock %}
 
 {% block content %}
 <div id="content-main">
-  <h1>Place Pictures</h1>
+  <h1>Place Image</h1>
 
-  <div class="module place-pictures-tools">
+  <div class="module place-image-tools">
     <form method="get">
       <input type="search" name="q" value="{{ query }}" placeholder="Search PRN or filename">
       <input type="submit" value="Search">
@@ -90,21 +90,21 @@
   </div>
 
   {% for group in groups %}
-    <div class="place-pictures-group">
-      <div class="place-pictures-group-header">
-        <div class="place-pictures-group-title">{{ group.prn }}</div>
-        <div class="place-pictures-count">{{ group.image_count }} image{{ group.image_count|pluralize }}</div>
+    <div class="place-image-group">
+      <div class="place-image-group-header">
+        <div class="place-image-group-title">{{ group.prn }}</div>
+        <div class="place-image-count">{{ group.image_count }} image{{ group.image_count|pluralize }}</div>
       </div>
       <ul>
         {% for image in group.images %}
           <li>
-            <div class="place-pictures-image-row">
+            <div class="place-image-image-row">
               <div>
                 <strong>{{ image.name }}</strong>
                 {% if image.is_main %}(main){% endif %}
                 {% if image.alt_text %}- {{ image.alt_text }}{% endif %}
               </div>
-              <a class="place-pictures-edit-link" href="{% url 'admin:image_image_change' image.id %}">Edit</a>
+              <a class="place-image-edit-link" href="{% url 'admin:image_image_change' image.id %}">Edit</a>
             </div>
           </li>
         {% endfor %}

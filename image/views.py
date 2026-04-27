@@ -1,7 +1,12 @@
 from django.db.models import Count, Q
+from django.http import JsonResponse
 from django.shortcuts import render
 
 from image.models import Image
+
+
+def health(request):
+    return JsonResponse({"status": "ok"})
 
 
 def image_list(request):

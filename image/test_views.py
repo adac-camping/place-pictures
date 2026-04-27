@@ -18,3 +18,10 @@ class ImageListViewTests(TestCase):
         self.assertEqual(len(response.context["groups"]), 1)
         self.assertEqual(response.context["groups"][0]["prn"], "prn:campsite:two")
         self.assertEqual(response.context["groups"][0]["image_count"], 1)
+
+    def test_health_endpoint_returns_ok(self):
+        client = Client()
+        response = client.get(reverse("health"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertJSONEqual(response.content, {"status": "ok"})

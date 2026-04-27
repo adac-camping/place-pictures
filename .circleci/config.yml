@@ -168,7 +168,7 @@ workflows:
          requires:
            - slack-approval-notification-production
          type: approval
-      # Request deployment to staging
+      # Request deployment to production
       - request_deployment:
          requires:
            - approval_production_deployment

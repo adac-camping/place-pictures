@@ -4,7 +4,7 @@ ARG dev=false
 ENV PIPENV_DEV=${dev}
 
 RUN apt-get update && apt-get -y upgrade \
-    && apt-get -y install gcc python3-dev libffi-dev make \
+    && apt-get -y install gcc python3-dev libffi-dev libpq-dev make \
     && pip install --no-cache-dir --upgrade pip pipenv
 
 WORKDIR /root
@@ -15,7 +15,6 @@ ARG UID=1000
 
 ENV USER=pin
 ENV HOME=/srv/app
-ENV DJANGO_SETTINGS_MODULE=django_project.settings
 
 RUN addgroup "$USER" \
     && adduser \
@@ -32,4 +31,4 @@ WORKDIR $HOME
 COPY --chown=$USER:$USER ./ $HOME/
 
 EXPOSE 8000
-CMD ["ddtrace-run", "gunicorn"]
+CMD ["ddtrace-run", "gunicorn", "-w", "9", "--preload", "--bind", "0.0.0.0:8000", "--access-logfile", "-", "place_pictures.wsgi"]
